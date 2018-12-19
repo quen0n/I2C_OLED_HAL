@@ -229,6 +229,15 @@ uint8_t OLED_init(I2C_HandleTypeDef *i2c, uint16_t address) {
 void OLED_setBrightness(uint8_t brightness) {
 	__sendCommandWithData(0x81, brightness);
 }
+//Включить/выключить дисплей
+void OLED_display(uint8_t state) {
+	__sendCommand(0xAE | state);
+}
+//Включить/выключить инверсию
+void OLED_inversion(uint8_t state) {
+	__sendCommand(0xA6 | state);
+}
+
 //Функция очистки экрана
 void OLED_clear(void) {
 	memset(displayBuffer, 0x00, 1024);

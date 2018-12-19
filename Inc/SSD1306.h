@@ -1,12 +1,14 @@
 #include "stm32f4xx_hal.h"
 
-#define OVERLAP_OFF 0
-#define OVERLAP_ON 1
+#define ON 1
+#define OFF 0
 
 uint8_t OLED_init(I2C_HandleTypeDef *i2c, uint16_t address);
 void OLED_setBrightness(uint8_t brightness);
 void OLED_clear(void);
 void OLED_fill(void);
+void OLED_display(uint8_t state);
+void OLED_inversion(uint8_t state);
 
 static uint8_t __sendCommandWithData(uint8_t cmd, uint8_t data);
 static uint8_t __sendCommand(uint8_t cmd);
