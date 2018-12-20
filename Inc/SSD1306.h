@@ -21,13 +21,11 @@ static uint8_t __sendCommand(uint8_t cmd);
 static uint8_t __sendDataArray(uint8_t byte[], uint16_t size);
 static uint8_t __sendData(uint8_t byte);
 static uint8_t __transmitToDisplay(uint8_t buff[], uint16_t size);
-
 static void __displayUpdate(void);
 
 
 
 static uint8_t __getCharLenght(unsigned char byte);
-void displayDraw(const uint8_t bitmap[], uint8_t lenght, uint8_t width, uint8_t x, uint8_t y);
 void displayPrintCharXY(unsigned char byte, uint8_t x, uint8_t y);
 void displayPrintTextXY(char *text, uint8_t x, uint8_t y);
 void displayPrintText(char *text);

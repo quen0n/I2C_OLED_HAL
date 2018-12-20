@@ -410,21 +410,6 @@ void displayPrintTextXY(char *text, uint8_t x, uint8_t y) {
 		x += __getCharLenght(i);
 	}		
 }
-void displayDraw(const uint8_t bitmap[], uint8_t lenght, uint8_t width, uint8_t x, uint8_t y) {
-	uint8_t pages;
-	if (width%8 == 0) {
-		pages = width/8;
-	} else {
-		pages = width/8+1;
-	}
-	for (uint8_t page = 0; page < pages; page++) {
-//		__setPage(page);
-//		__setColumn(x);
-		for (uint8_t column = 0; column < width; column++) {
-			__sendData(bitmap[column + page*width]);
-		}
-	}
-}
 
 static uint8_t __getCharLenght(unsigned char byte) {
 	if ((byte < 128) & (byte > 31)) {
