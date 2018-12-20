@@ -1,5 +1,8 @@
 #include "stm32f4xx_hal.h"
 
+#define DISPLAY_LENGHT 128
+#define DISPLAY_WIDTH 64
+
 #define ON 1
 #define OFF 0
 
@@ -9,6 +12,9 @@ void OLED_clear(void);
 void OLED_fill(void);
 void OLED_display(uint8_t state);
 void OLED_inversion(uint8_t state);
+void OLED_goto(uint8_t x, uint8_t y);
+void OLED_draw(const uint8_t bitmap[], uint8_t length, uint8_t width);
+void OLED_update(void);
 
 static uint8_t __sendCommandWithData(uint8_t cmd, uint8_t data);
 static uint8_t __sendCommand(uint8_t cmd);
