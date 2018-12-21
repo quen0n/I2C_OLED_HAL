@@ -253,20 +253,31 @@ void OLED_goto(uint8_t x, uint8_t y) {
 	_y = y;
 }
 //Функция рисования рисунка на экране
-void OLED_draw(const uint8_t bitmap[], uint8_t length, uint8_t width) {
+void OLED_draw(const uint8_t bitmap[], uint8_t length, uint8_t width, uint8_t inversion, uint8_t autoinversion, uint8_t transparent) {
 	if (length+_x > 128) length = 128;
 	if (width+_y > 64) width = 64;
 	//TODO: Фикс того, что есть возможность обратиться к нереальным элементам массива
 	for (uint8_t page = 0; page < width/8; page++) {
 		for (uint8_t columns = 0; columns < length; columns++) {
 			uint8_t column = displayBuffer[_y/8][_x];
-			column &= (0xFF >> (8 - _y%8));
-			column |= (bitmap[columns+(_y/8)*length] << (_y%8));
+			uint8_t bitmapColumn = bitmap[columns+(_y/8)*length];
+			
+			if (inversion == ON) bitmapColumn ^= 0xFF;
+			if (autoinversion == ON) {
+				column ^= (bitmapColumn << (_y%8));
+			} else {
+				if (transparent == OFF) column &= (0xFF >> (8 - _y%8));
+				column |= (bitmapColumn << (_y%8));
+			}
 			displayBuffer[_y/8][_x] = column;
 		
 			column = displayBuffer[_y/8+1][_x];
-			column &= (0xFF << _y%8);
-			column |= (bitmap[columns+(_y/8)*length] >> (8 - _y%8));
+			if (autoinversion == ON) {
+				column ^= (bitmapColumn >> (8 - _y%8));
+			} else {
+				if (transparent == OFF) column &= (0xFF << _y%8);
+				column |= (bitmapColumn >> (8 - _y%8));
+			}
 			displayBuffer[_y/8+1][_x] = column;
 				
 			_x++;

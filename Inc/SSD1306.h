@@ -13,7 +13,7 @@ void OLED_fill(void);
 void OLED_display(uint8_t state);
 void OLED_inversion(uint8_t state);
 void OLED_goto(uint8_t x, uint8_t y);
-void OLED_draw(const uint8_t bitmap[], uint8_t length, uint8_t width);
+void OLED_draw(const uint8_t bitmap[], uint8_t length, uint8_t width, uint8_t inversion, uint8_t autoinversion, uint8_t transparent);
 void OLED_update(void);
 
 static uint8_t __sendCommandWithData(uint8_t cmd, uint8_t data);
