@@ -254,10 +254,14 @@ void OLED_goto(uint8_t x, uint8_t y) {
 }
 //Функция рисования рисунка на экране
 void OLED_draw(const uint8_t bitmap[], uint8_t length, uint8_t width, uint8_t inversion, uint8_t autoinversion, uint8_t transparent) {
+	//TODO: Перегрузка функции
 	if (length+_x > 128) length = 128;
 	if (width+_y > 64) width = 64;
 	//TODO: Фикс того, что есть возможность обратиться к нереальным элементам массива
-	for (uint8_t page = 0; page < width/8; page++) {
+	uint8_t pages = width/8;
+	if (width%8 > 0) pages++;
+	
+	for (uint8_t page = 0; page < pages; page++) {
 		for (uint8_t columns = 0; columns < length; columns++) {
 			uint8_t column = displayBuffer[_y/8][_x];
 			uint8_t bitmapColumn = bitmap[columns+(_y/8)*length];
@@ -286,15 +290,54 @@ void OLED_draw(const uint8_t bitmap[], uint8_t length, uint8_t width, uint8_t in
 		_y += 8;
 		if (_y > 64) _y = 0;
 	}
-	_x += length;
-	_y -= 8*(width/8);
 }
 
 //Функция отправки буфера на дисплей
 void OLED_update(void) {
 	__displayUpdate();
 }
-
+//Функция печати символа на дисплее
+void OLED_printChar(unsigned char byte, uint8_t inversion, uint8_t autoinversion, uint8_t transparent) {
+	//TODO: Перегрузка функции
+	//Печать латиницы или символов из ASCII
+	if ((byte < 128) & (byte > 31)) {
+		uint8_t width = 12;
+		uint8_t bitmapLength = VerdanaLatin10x12[byte-32][0]; //Ширина символа
+		uint8_t pages = width/8;
+		if (width%8 > 0) pages++;
+		
+		uint8_t charBitmap[bitmapLength*pages];
+		
+		//Уебанский генератор шрифтов требует уебанских решений
+		for (uint8_t page = 0; page < pages; page++) {
+			for (uint8_t i = 0; i < bitmapLength; i++) {
+				uint8_t bitmapIndex = page*bitmapLength+i;
+				uint8_t fontIndex = 1+i*2+page;
+				charBitmap[bitmapIndex] = VerdanaLatin10x12[byte-32][fontIndex];
+			}
+		}
+		OLED_draw(charBitmap, bitmapLength, width, inversion, autoinversion, transparent);
+	}
+	//Печать кириллицы
+	if (byte >= 192) {
+		uint8_t width = 12;
+		uint8_t bitmapLength = VerdanaCyrillic10x12[byte-192][0]; //Ширина символа
+		uint8_t pages = width/8;
+		if (width%8 > 0) pages++;
+		
+		uint8_t charBitmap[bitmapLength*pages];
+		
+		//Уебанский генератор шрифтов требует уебанских решений
+		for (uint8_t page = 0; page < pages; page++) {
+			for (uint8_t i = 0; i < bitmapLength; i++) {
+				uint8_t bitmapIndex = page*bitmapLength+i;
+				uint8_t fontIndex = 1+i*2+page;
+				charBitmap[bitmapIndex] = VerdanaCyrillic10x12[byte-192][fontIndex];
+			}
+		}
+		OLED_draw(charBitmap, bitmapLength, width, inversion, autoinversion, transparent);
+	}
+}
 /* Служебные функции */
 
 //Функция для печати буфера на экране
@@ -382,38 +425,7 @@ static uint8_t __transmitToDisplay(uint8_t buff[], uint16_t size) {
 
 
 //Хуйня какая-то
-void displayPrintCharXY(unsigned char byte, uint8_t column, uint8_t page) {
-	//Печать латиницы или символов из ASCII
-	if ((byte < 128) & (byte > 31)) {
-		for (uint8_t byteNumber = 0; byteNumber < __getCharLenght(byte); byteNumber++) {
-//			__setPage(page);
-//			__setColumn(column);
-			__sendData(VerdanaLatin10x12[byte-32][1+byteNumber*2]);
-//			__setPage(page+1);
-//			__setColumn(column);
-			__sendData(VerdanaLatin10x12[byte-32][1+byteNumber*2+1]);
-			if (column++ > 127) {
-				column = 0;
-				page++;
-			}
-		}
-	}
-	//Печать кириллицы
-	if (byte >= 192) {
-		for (uint8_t byteNumber = 0; byteNumber < __getCharLenght(byte); byteNumber++) {
-//			__setPage(page);
-//			__setColumn(column);
-			__sendData(VerdanaCyrillic10x12[byte-192][1+byteNumber*2]);
-//			__setPage(page+1);
-//			__setColumn(column);
-			__sendData(VerdanaCyrillic10x12[byte-192][1+byteNumber*2+1]);
-			if (column++ > 127) {
-				column = 0;
-				page++;
-			}
-		}
-	}
-}
+/*
 void displayPrintTextXY(char *text, uint8_t x, uint8_t y) {
 	uint8_t i = 0;
 	while(*text) {
@@ -431,4 +443,4 @@ static uint8_t __getCharLenght(unsigned char byte) {
 		return VerdanaCyrillic10x12[byte-192][0];
 	}
 	return 0;
-}
+}*/

@@ -15,6 +15,7 @@ void OLED_inversion(uint8_t state);
 void OLED_goto(uint8_t x, uint8_t y);
 void OLED_draw(const uint8_t bitmap[], uint8_t length, uint8_t width, uint8_t inversion, uint8_t autoinversion, uint8_t transparent);
 void OLED_update(void);
+void OLED_printChar(unsigned char byte, uint8_t inversion, uint8_t autoinversion, uint8_t transparent);
 
 static uint8_t __sendCommandWithData(uint8_t cmd, uint8_t data);
 static uint8_t __sendCommand(uint8_t cmd);
@@ -22,12 +23,3 @@ static uint8_t __sendDataArray(uint8_t byte[], uint16_t size);
 static uint8_t __sendData(uint8_t byte);
 static uint8_t __transmitToDisplay(uint8_t buff[], uint16_t size);
 static void __displayUpdate(void);
-
-
-
-static uint8_t __getCharLenght(unsigned char byte);
-void displayPrintCharXY(unsigned char byte, uint8_t x, uint8_t y);
-void displayPrintTextXY(char *text, uint8_t x, uint8_t y);
-void displayPrintText(char *text);
-
-
