@@ -253,43 +253,54 @@ void OLED_goto(uint8_t x, uint8_t y) {
 	_y = y;
 }
 //Функция рисования рисунка на экране
+//TODO: Перегрузка функции
 void OLED_draw(const uint8_t bitmap[], uint8_t length, uint8_t width, uint8_t inversion, uint8_t autoinversion, uint8_t transparent) {
-	//TODO: Перегрузка функции
-	if (length+_x > 128) length = 128;
-	if (width+_y > 64) width = 64;
-	//TODO: Фикс того, что есть возможность обратиться к нереальным элементам массива
-	uint8_t pages = width/8;
-	if (width%8 > 0) pages++;
-	
+	uint8_t _length, _width; //Реальные значения размера отображаемого рисунка с коррекцией на то, сколько поместится рисунка на экран
+	//Проверка и коррекция длины и ширины рисунка 
+	if ((length + _x) > (DISPLAY_LENGHT-1)) _length = DISPLAY_LENGHT-1-_x; else _length = length;
+	if ((width + _y) > (DISPLAY_WIDTH-1)) _width = DISPLAY_WIDTH-1-_y; else _width = width;
+	//Проверка чтобы скорректированные данные не были за пределами допустимого
+	if (((_length == 0) || (_length > DISPLAY_LENGHT-1)) || (_width <= 0 || (_width > DISPLAY_WIDTH-1))) return;
+	//Вычисление количества страниц, которые займет рисунок
+	uint8_t pages = _width/8;
+	if (_width%8 > 0) pages++; //Если реальный размер не кратен 8, то кол-во страниц увиличивается на 1
+	//Печать в буфер столбцов
 	for (uint8_t page = 0; page < pages; page++) {
-		for (uint8_t columns = 0; columns < length; columns++) {
-			uint8_t column = displayBuffer[_y/8][_x];
-			uint8_t bitmapColumn = bitmap[columns+(_y/8)*length];
-			
-			if (inversion == ON) bitmapColumn ^= 0xFF;
+		for (uint8_t column = 0; column < _length; column++) {
+			uint8_t bufferColumn = (displayBuffer[_y/8][_x]); //Столбец из буфера
+			uint8_t bitmapColumn = bitmap[column+page*length]; //Столбец из битмепа
+			if (inversion == ON) bitmapColumn ^= 0xFF; //Инвертирование 
 			if (autoinversion == ON) {
-				column ^= (bitmapColumn << (_y%8));
+				bufferColumn ^= (bitmapColumn << (_y%8)); //Автоинверсия и смещение вниз столбца для подгона по Y
 			} else {
-				if (transparent == OFF) column &= (0xFF >> (8 - _y%8));
-				column |= (bitmapColumn << (_y%8));
+				if (transparent == OFF) bufferColumn &= (0xFF >> (8 - _y%8)); //Очистка участка буфера если не включена прозрачность
+				bufferColumn |= (bitmapColumn << (_y%8));
 			}
-			displayBuffer[_y/8][_x] = column;
-		
-			column = displayBuffer[_y/8+1][_x];
-			if (autoinversion == ON) {
-				column ^= (bitmapColumn >> (8 - _y%8));
-			} else {
-				if (transparent == OFF) column &= (0xFF << _y%8);
-				column |= (bitmapColumn >> (8 - _y%8));
+			displayBuffer[_y/8][_x] = bufferColumn;
+			//Допечатывание нижней части столбцов, если оно помещается на экран и если до этого было смещение столбца
+			if ((_y+8 <= 63) & (_y%8 != 0)) {
+				bufferColumn = (displayBuffer[_y/8+1][_x]); //Столбец из буфера с следующей страницы
+				bitmapColumn = bitmap[column+page*length]; //Столбец из битмепа
+				if (inversion == ON) bitmapColumn ^= 0xFF; //Инвертирование
+				if (autoinversion == ON) {
+					bufferColumn ^= (bitmapColumn << (_y%8)); //Автоинверсия и смещение вниз столбца для подгона по Y
+				} else {
+					if (transparent == OFF) bufferColumn &= (0xFF >> (8 - _y%8)); //Очистка участка буфера если не включена прозрачность
+					bufferColumn |= (bitmapColumn << (_y%8));
+				}
+				bufferColumn = bitmapColumn;
+				displayBuffer[_y/8+1][_x] = bufferColumn;
 			}
-			displayBuffer[_y/8+1][_x] = column;
-				
 			_x++;
 		}
-		_x -= length;
+		//Увеличение Y после печати строчки стобцов
 		_y += 8;
-		if (_y > 64) _y = 0;
+		//Уменьшение X в начальное положение для корректной печати следующей строчки
+		_x -= _length;
 	}
+	//Коррекция X и Y для корректной печати следующего рисунка
+	_y -= 8*pages;
+	_x += _length;
 }
 
 //Функция отправки буфера на дисплей
