@@ -349,6 +349,15 @@ void OLED_printChar(unsigned char byte, uint8_t inversion, uint8_t autoinversion
 		OLED_draw(charBitmap, bitmapLength, width, inversion, autoinversion, transparent);
 	}
 }
+//Функция печати текста на экране
+void OLED_print(char *text, uint8_t inversion, uint8_t autoinversion, uint8_t transparent) {
+	uint8_t i = 0;
+	while(*text) {
+		i = *text++;
+		OLED_printChar(i, inversion, autoinversion, transparent);
+	}		
+}
+
 /* Служебные функции */
 
 //Функция для печати буфера на экране
@@ -398,60 +407,3 @@ static uint8_t __sendCommandWithData(uint8_t cmd, uint8_t data) {
 static uint8_t __transmitToDisplay(uint8_t buff[], uint16_t size) {
 	return HAL_I2C_Master_Transmit(_i2c, _address, buff, size, 0xFF);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//Хуйня какая-то
-/*
-void displayPrintTextXY(char *text, uint8_t x, uint8_t y) {
-	uint8_t i = 0;
-	while(*text) {
-		i = *text++;
-		displayPrintCharXY(i, x, y);
-		x += __getCharLenght(i);
-	}		
-}
-
-static uint8_t __getCharLenght(unsigned char byte) {
-	if ((byte < 128) & (byte > 31)) {
-		return VerdanaLatin10x12[byte-32][0];
-	}
-	if (byte >= 192) {
-		return VerdanaCyrillic10x12[byte-192][0];
-	}
-	return 0;
-}*/

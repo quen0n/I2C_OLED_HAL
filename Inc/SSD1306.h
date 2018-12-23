@@ -16,6 +16,7 @@ void OLED_goto(uint8_t x, uint8_t y);
 void OLED_draw(const uint8_t bitmap[], uint8_t length, uint8_t width, uint8_t inversion, uint8_t autoinversion, uint8_t transparent);
 void OLED_update(void);
 void OLED_printChar(unsigned char byte, uint8_t inversion, uint8_t autoinversion, uint8_t transparent);
+void OLED_print(char *text, uint8_t inversion, uint8_t autoinversion, uint8_t transparent);
 
 static uint8_t __sendCommandWithData(uint8_t cmd, uint8_t data);
 static uint8_t __sendCommand(uint8_t cmd);
