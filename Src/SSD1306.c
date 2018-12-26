@@ -5,6 +5,8 @@ uint16_t _address;
 uint8_t _x, _y;
 uint8_t displayBuffer[8][128]; //8 страниц по 128 столбцов
 
+//TODO: Шрифты в структуру
+//TODO: Исправить шрифт, некоторые символы некрасивые, кириллица и латиница разные по высоте
 const uint8_t VerdanaLatin10x12[96][21] = {
 	{0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},  // Code for char  
 	{0x03, 0x00, 0x00, 0x00, 0x00, 0xFE, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},  // Code for char !
@@ -254,6 +256,7 @@ void OLED_goto(uint8_t x, uint8_t y) {
 }
 //Функция рисования рисунка на экране
 //TODO: Перегрузка функции
+//TODO: Исправить в режиме инверсии и непрозрачности задевание неиспользуемых битов
 void OLED_draw(const uint8_t bitmap[], uint8_t length, uint8_t width, uint8_t inversion, uint8_t autoinversion, uint8_t transparent) {
 	uint8_t _length, _width; //Реальные значения размера отображаемого рисунка с коррекцией на то, сколько поместится рисунка на экран
 	//Проверка и коррекция длины и ширины рисунка 
@@ -269,7 +272,7 @@ void OLED_draw(const uint8_t bitmap[], uint8_t length, uint8_t width, uint8_t in
 		for (uint8_t column = 0; column < _length; column++) {
 			uint8_t bufferColumn = (displayBuffer[_y/8][_x]); //Столбец из буфера
 			uint8_t bitmapColumn = bitmap[column+page*length]; //Столбец из битмепа
-			if (inversion == ON) bitmapColumn ^= 0xFF; //Инвертирование 
+			if (inversion == ON) bitmapColumn ^= 0xFF; //Инвертирование
 			if (autoinversion == ON) {
 				bufferColumn ^= (bitmapColumn << (_y%8)); //Автоинверсия и смещение вниз столбца для подгона по Y
 			} else {
@@ -277,18 +280,19 @@ void OLED_draw(const uint8_t bitmap[], uint8_t length, uint8_t width, uint8_t in
 				bufferColumn |= (bitmapColumn << (_y%8));
 			}
 			displayBuffer[_y/8][_x] = bufferColumn;
+			
 			//Допечатывание нижней части столбцов, если оно помещается на экран и если до этого было смещение столбца
 			if ((_y+8 <= 63) & (_y%8 != 0)) {
 				bufferColumn = (displayBuffer[_y/8+1][_x]); //Столбец из буфера с следующей страницы
 				bitmapColumn = bitmap[column+page*length]; //Столбец из битмепа
 				if (inversion == ON) bitmapColumn ^= 0xFF; //Инвертирование
+				
 				if (autoinversion == ON) {
-					bufferColumn ^= (bitmapColumn << (_y%8)); //Автоинверсия и смещение вниз столбца для подгона по Y
+					bufferColumn ^= (bitmapColumn >> (8-_y%8)); //Автоинверсия и смещение вниз столбца для подгона по Y
 				} else {
-					if (transparent == OFF) bufferColumn &= (0xFF >> (8 - _y%8)); //Очистка участка буфера если не включена прозрачность
-					bufferColumn |= (bitmapColumn << (_y%8));
+					if (transparent == OFF) bufferColumn &= (0xFF << (8 - _y%8)); //Очистка участка буфера если не включена прозрачность
+					bufferColumn |= (bitmapColumn >> (8-_y%8));
 				}
-				bufferColumn = bitmapColumn;
 				displayBuffer[_y/8+1][_x] = bufferColumn;
 			}
 			_x++;
