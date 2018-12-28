@@ -257,7 +257,7 @@ void OLED_goto(uint8_t x, uint8_t y) {
 //Функция рисования рисунка на экране
 //TODO: Перегрузка функции
 //TODO: Исправить в режиме инверсии и непрозрачности задевание неиспользуемых битов
-void OLED_draw(const uint8_t bitmap[], uint8_t length, uint8_t width, uint8_t inversion, uint8_t autoinversion, uint8_t transparent) {
+void OLED_draw(const uint8_t bitmap[], uint8_t length, uint8_t width, uint8_t inversion, uint8_t transparent) {
 	uint8_t _length, _width; //Реальные значения размера отображаемого рисунка с коррекцией на то, сколько поместится рисунка на экран
 	//Проверка и коррекция длины и ширины рисунка 
 	if ((length + _x) > (DISPLAY_LENGHT-1)) _length = DISPLAY_LENGHT-1-_x; else _length = length;
@@ -266,14 +266,15 @@ void OLED_draw(const uint8_t bitmap[], uint8_t length, uint8_t width, uint8_t in
 	if (((_length == 0) || (_length > DISPLAY_LENGHT-1)) || (_width <= 0 || (_width > DISPLAY_WIDTH-1))) return;
 	//Вычисление количества страниц, которые займет рисунок
 	uint8_t pages = _width/8;
-	if (_width%8 > 0) pages++; //Если реальный размер не кратен 8, то кол-во страниц увиличивается на 1
+	if (_width%8 > 0) pages++; //Если реальный размер не кратен 8, то кол-во страниц увеличивается на 1
 	//Печать в буфер столбцов
 	for (uint8_t page = 0; page < pages; page++) {
 		for (uint8_t column = 0; column < _length; column++) {
 			uint8_t bufferColumn = (displayBuffer[_y/8][_x]); //Столбец из буфера
 			uint8_t bitmapColumn = bitmap[column+page*length]; //Столбец из битмепа
 			if (inversion == ON) bitmapColumn ^= 0xFF; //Инвертирование
-			if (autoinversion == ON) {
+
+			if (inversion == AUTO) {
 				bufferColumn ^= (bitmapColumn << (_y%8)); //Автоинверсия и смещение вниз столбца для подгона по Y
 			} else {
 				if (transparent == OFF) bufferColumn &= (0xFF >> (8 - _y%8)); //Очистка участка буфера если не включена прозрачность
@@ -287,13 +288,13 @@ void OLED_draw(const uint8_t bitmap[], uint8_t length, uint8_t width, uint8_t in
 				bitmapColumn = bitmap[column+page*length]; //Столбец из битмепа
 				if (inversion == ON) bitmapColumn ^= 0xFF; //Инвертирование
 				
-				if (autoinversion == ON) {
+				if (inversion == AUTO) {
 					bufferColumn ^= (bitmapColumn >> (8-_y%8)); //Автоинверсия и смещение вниз столбца для подгона по Y
 				} else {
-					if (transparent == OFF) bufferColumn &= (0xFF << (8 - _y%8)); //Очистка участка буфера если не включена прозрачность
+					if (transparent == OFF) bufferColumn &= (0xFF << (_y%8)); //Очистка участка буфера если не включена прозрачность
 					bufferColumn |= (bitmapColumn >> (8-_y%8));
 				}
-				displayBuffer[_y/8+1][_x] = bufferColumn;
+				displayBuffer[_y/8+1][_x] = bufferColumn; //Сложение верхней и нижней части
 			}
 			_x++;
 		}
@@ -312,7 +313,7 @@ void OLED_update(void) {
 	__displayUpdate();
 }
 //Функция печати символа на дисплее
-void OLED_printChar(unsigned char byte, uint8_t inversion, uint8_t autoinversion, uint8_t transparent) {
+void OLED_printChar(unsigned char byte, uint8_t inversion, uint8_t transparent) {
 	//TODO: Перегрузка функции
 	//Печать латиницы или символов из ASCII
 	if ((byte < 128) & (byte > 31)) {
@@ -331,7 +332,7 @@ void OLED_printChar(unsigned char byte, uint8_t inversion, uint8_t autoinversion
 				charBitmap[bitmapIndex] = VerdanaLatin10x12[byte-32][fontIndex];
 			}
 		}
-		OLED_draw(charBitmap, bitmapLength, width, inversion, autoinversion, transparent);
+		OLED_draw(charBitmap, bitmapLength, width, inversion, transparent);
 	}
 	//Печать кириллицы
 	if (byte >= 192) {
@@ -350,15 +351,15 @@ void OLED_printChar(unsigned char byte, uint8_t inversion, uint8_t autoinversion
 				charBitmap[bitmapIndex] = VerdanaCyrillic10x12[byte-192][fontIndex];
 			}
 		}
-		OLED_draw(charBitmap, bitmapLength, width, inversion, autoinversion, transparent);
+		OLED_draw(charBitmap, bitmapLength, width, inversion, transparent);
 	}
 }
 //Функция печати текста на экране
-void OLED_print(char *text, uint8_t inversion, uint8_t autoinversion, uint8_t transparent) {
+void OLED_print(char *text, uint8_t inversion, uint8_t transparent) {
 	uint8_t i = 0;
 	while(*text) {
 		i = *text++;
-		OLED_printChar(i, inversion, autoinversion, transparent);
+		OLED_printChar(i, inversion, transparent);
 	}		
 }
 
